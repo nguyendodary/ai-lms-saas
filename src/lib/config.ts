@@ -11,7 +11,3 @@ export const config = {
     publishableKey: 'pk_test_51TGG6sPTRilZgD25eVv3qAan6AZuFplyvgHXBo8HyfzQp1u0xHJgSgmHjUkMnr6cqX76fYZgAUTGm9sGK0s2MOXm00tIC08IOZ'
   }
 };
-
-// Helper functions to get API keys with fallbacks
-export const getVapiKey = () => import.meta.env.VITE_VAPI_API_KEY || config.vapi.apiKey;
-export const getStripeKey = () => import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || config.stripe.publishableKey;

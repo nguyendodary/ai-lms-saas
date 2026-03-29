@@ -1,15 +1,17 @@
 # AI LMS SaaS
 
-An AI-powered Learning Management System that lets you create personalized AI tutors (companions) for voice-based learning sessions.
+AI-powered Learning Management System. Create personalized AI tutors and learn through real-time voice conversations.
 
 ## Features
 
-- **Real-time Voice AI** - Natural voice conversations with AI tutors
-- **Custom Companions** - Create AI tutors for any subject with different teaching styles (professional, friendly, socratic, direct)
-- **13+ Subjects** - Mathematics, Science, History, English, Computer Science, Physics, Chemistry, Biology, Geography, Art, Music, Foreign Language, Economics
-- **Learning Analytics** - Track progress with session history, daily activity charts, and subject breakdowns
-- **Subscription Plans** - Free tier (10 sessions/month) and Pro tier (unlimited)
-- **Responsive UI** - Dark theme, sidebar navigation, modern design
+- **AI Companions** -- Create tutors with custom name, subject, topic, voice, teaching style, and session duration
+- **Voice Sessions** -- Real-time voice conversations with AI tutors (powered by Vapi AI)
+- **13 Subjects** -- Mathematics, Science, History, English, Computer Science, Physics, Chemistry, Biology, Geography, Art, Music, Foreign Language, Economics
+- **4 Teaching Styles** -- Professional, Friendly, Socratic, Direct
+- **6 Voice Options** -- Alloy, Echo, Fable, Onyx, Nova, Shimmer
+- **Session History** -- Browse past sessions with full transcripts
+- **Analytics Dashboard** -- Total sessions, minutes learned, daily activity chart, subject breakdown
+- **Subscription Plans** -- Free (10 sessions/month) and Pro ($19.99/month, unlimited)
 
 ## Tech Stack
 
@@ -18,20 +20,28 @@ An AI-powered Learning Management System that lets you create personalized AI tu
 | Frontend | React 19, TypeScript, Vite |
 | Styling | Tailwind CSS, shadcn/ui |
 | Routing | React Router DOM v7 |
-| Auth / DB | Supabase (PostgreSQL + Auth + RLS) |
-| Voice AI | Vapi AI |
+| Backend | Supabase (Auth, PostgreSQL, RLS) |
+| Voice | Vapi AI |
 | Payments | Stripe |
-| Production | Nginx, Docker |
+| Deploy | Docker, Nginx |
 
 ## Prerequisites
 
-- **Node.js** 18+ and npm
-- **Docker** and **Docker Compose** (for containerized setup)
-- A **Supabase** account ([supabase.com](https://supabase.com))
-- (Optional) **Vapi AI** account for voice features
-- (Optional) **Stripe** account for payment processing
+- Node.js 18+
+- Docker & Docker Compose (for containerized deployment)
+- Supabase account
 
-## Environment Variables
+## Setup
+
+### 1. Clone and install
+
+```bash
+git clone https://github.com/nguyendodary/ai-lms-saas.git
+cd ai-lms-saas
+npm install
+```
+
+### 2. Environment variables
 
 ```bash
 cp .env.example .env
@@ -39,156 +49,132 @@ cp .env.example .env
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `VITE_SUPABASE_URL` | Yes | Your Supabase project URL |
-| `VITE_SUPABASE_ANON_KEY` | Yes | Your Supabase anonymous/public key |
-| `VITE_VAPI_API_KEY` | No | Vapi AI key for voice sessions |
-| `VITE_STRIPE_PUBLISHABLE_KEY` | No | Stripe publishable key for payments |
+| `VITE_SUPABASE_URL` | Yes | Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Yes | Supabase anonymous key |
+| `VITE_VAPI_API_KEY` | No | Vapi AI key (voice sessions) |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | No | Stripe publishable key (payments) |
 
-> **Note:** The app includes hardcoded fallback values in `src/lib/config.ts`, so it works out of the box without a `.env` file. Set your own Supabase project for a personal database.
+> Fallback values are hardcoded in `src/lib/config.ts`. The app works without `.env` but uses a shared database.
 
-## Database Setup
+### 3. Database
 
-1. Go to your Supabase project dashboard
-2. Open the **SQL Editor**
-3. Copy and paste the contents of `supabase-schema.sql`
-4. Run it to create all tables, RLS policies, and triggers
+Run `supabase-schema.sql` in your Supabase SQL Editor. This creates:
 
-This creates 4 tables: `users`, `companions`, `sessions`, `subscriptions` — all protected with Row Level Security.
+- `users` -- profiles, plan, session limits
+- `companions` -- AI tutor configurations
+- `sessions` -- learning session records with transcripts
+- `subscriptions` -- Stripe subscription data
 
-> **Important for development:** By default, Supabase requires email confirmation before sign-in works. To disable this, go to **Authentication > Providers > Email** in your Supabase dashboard and turn off **"Confirm email"**.
+All tables have Row Level Security enabled.
 
-## Running Locally
+### 4. Disable email confirmation (development)
+
+Supabase requires email verification by default. To skip it:
+
+**Supabase Dashboard > Authentication > Providers > Email > Confirm email (OFF)**
+
+## Run locally
 
 ```bash
-# 1. Install dependencies
-npm install
-
-# 2. Create .env with your Supabase credentials
-cp .env.example .env
-
-# 3. Start the dev server
 npm run dev
 ```
 
-The app runs at `http://localhost:5173` (or the next available port if 5173 is in use).
+Opens at `http://localhost:5173`.
 
-### Other Commands
-
-```bash
-npm run build       # Type-check + production build (output: dist/)
-npm run preview     # Preview the production build locally
-npm run typecheck   # TypeScript type checking only
-```
-
-## Running with Docker
+## Run with Docker
 
 ```bash
-# 1. Create .env with your credentials
-cp .env.example .env
-
-# 2. Build and start
+cp .env.example .env   # fill in your keys
 docker compose up --build
-
-# Or run in detached mode
-docker compose up --build -d
 ```
 
-The app runs at `http://localhost:8080`.
+Opens at `http://localhost:8080`.
 
-### Docker Commands
+The Dockerfile uses multi-stage build: Node.js builds the app, Nginx serves static files. Environment variables from `.env` are passed as build args since Vite embeds them at build time.
+
+### Docker commands
 
 ```bash
-docker compose up --build      # Build image and start container
-docker compose up --build -d   # Same, in background
-docker compose down            # Stop and remove container
-docker compose logs -f         # Stream container logs
-docker compose exec app sh     # Open a shell in the container
+docker compose up --build -d   # start (background)
+docker compose down             # stop
+docker compose logs -f          # logs
+docker compose exec app sh      # shell
 ```
 
-### How Docker Build Works
+## Scripts
 
-The Dockerfile uses a multi-stage build:
+```bash
+npm run dev         # dev server
+npm run build       # typecheck + production build
+npm run preview     # preview production build
+npm run typecheck   # typecheck only
+```
 
-1. **Builder stage** (`node:20-alpine`) - Installs dependencies and runs `npm run build`. Environment variables from your `.env` file are injected as build args so Vite can embed them into the bundle.
-2. **Production stage** (`nginx:alpine`) - Copies the built static files and serves them with Nginx on port 80.
-
-Docker Compose reads your `.env` file and passes the values as build arguments automatically.
-
-## Project Structure
+## Project structure
 
 ```
-src/
-  components/
-    ui/                   # shadcn/ui components (button, card, input, select, etc.)
-    dashboard-layout.tsx  # Dashboard shell (sidebar + header)
-    header.tsx            # Top navigation bar
-    sidebar.tsx           # Collapsible sidebar navigation
-  lib/
-    auth-context.tsx      # AuthProvider + useAuth hook (Supabase Auth)
-    config.ts             # Fallback API keys
-    supabase.ts           # Supabase client singleton
-    utils.ts              # cn() utility (clsx + tailwind-merge)
-  pages/
-    home.tsx              # Landing page
-    sign-in.tsx           # Sign in (email/password)
-    sign-up.tsx           # Sign up (auto sign-in after creation)
-    pricing.tsx           # Pricing plans (Free $0 / Pro $19.99/mo)
-    dashboard.tsx         # Dashboard overview (stats, companions)
-    companions.tsx        # Create/manage AI companions
-    session.tsx           # Live voice learning session
-    sessions.tsx          # Session history
-    analytics.tsx         # Learning analytics
-    profile.tsx           # User profile & subscription info
-  types/
-    index.ts              # TypeScript interfaces
-  App.tsx                 # Root component with routes
-  main.tsx                # Entry point
-  index.css               # Global styles + CSS variables
+.
+├── Dockerfile                  # multi-stage build (node + nginx)
+├── docker-compose.yml          # container orchestration
+├── nginx.conf                  # production web server config
+├── supabase-schema.sql         # database schema
+├── package.json
+├── index.html                  # vite entry point
+├── vite.config.ts
+├── tailwind.config.js
+├── tsconfig.json
+└── src/
+    ├── main.tsx                # react entry
+    ├── App.tsx                 # routes
+    ├── index.css               # global styles + theme
+    ├── components/
+    │   ├── ui/                 # button, card, input, label, select, badge, progress, skeleton
+    │   ├── dashboard-layout.tsx
+    │   ├── header.tsx
+    │   └── sidebar.tsx
+    ├── lib/
+    │   ├── auth-context.tsx    # AuthProvider, useAuth
+    │   ├── supabase.ts         # supabase client
+    │   ├── config.ts           # fallback keys
+    │   └── utils.ts            # cn() helper
+    ├── pages/
+    │   ├── home.tsx            # landing page
+    │   ├── sign-in.tsx
+    │   ├── sign-up.tsx
+    │   ├── pricing.tsx
+    │   ├── dashboard.tsx       # overview + stats
+    │   ├── companions.tsx      # CRUD companions
+    │   ├── session.tsx         # live voice session
+    │   ├── sessions.tsx        # session history
+    │   ├── analytics.tsx       # learning analytics
+    │   └── profile.tsx         # user profile
+    └── types/
+        └── index.ts
 ```
 
 ## Routes
 
-| Path | Page | Auth Required |
-|------|------|:---:|
-| `/` | Landing page | No |
+| Path | Page | Auth |
+|------|------|:----:|
+| `/` | Landing | No |
 | `/sign-in` | Sign in | No |
 | `/sign-up` | Sign up | No |
-| `/pricing` | Pricing plans | No |
-| `/dashboard` | Dashboard overview | Yes |
-| `/dashboard/companions` | Manage AI companions | Yes |
-| `/dashboard/companions/:id` | Live learning session | Yes |
-| `/dashboard/sessions` | Session history | Yes |
-| `/dashboard/analytics` | Learning analytics | Yes |
-| `/dashboard/profile` | User profile | Yes |
-
-## Services
-
-- **Supabase** - Authentication (email/password), database (PostgreSQL), row-level security
-- **Vapi AI** - Real-time voice conversations with AI tutors (currently simulated for demo)
-- **Stripe** - Subscription billing (Free: 10 sessions/month, Pro: unlimited)
+| `/pricing` | Pricing | No |
+| `/dashboard` | Overview | Yes |
+| `/dashboard/companions` | Companions | Yes |
+| `/dashboard/companions/:id` | Voice session | Yes |
+| `/dashboard/sessions` | History | Yes |
+| `/dashboard/analytics` | Analytics | Yes |
+| `/dashboard/profile` | Profile | Yes |
 
 ## Troubleshooting
 
-**Build fails with TypeScript errors:**
-```bash
-npm run typecheck
-```
+**Can't sign in after sign up** -- Disable email confirmation in Supabase (see step 4).
 
-**Can't sign in after sign up:**
-- Disable email confirmation in Supabase: **Authentication > Providers > Email > Confirm email** (turn off)
+**TypeScript errors** -- Run `npm run typecheck` and fix reported issues.
 
-**Docker build fails or uses wrong env vars:**
-```bash
-docker compose down
-docker system prune -f
-docker compose up --build --no-cache
-```
+**Docker build uses wrong env vars** -- Ensure `.env` exists in project root. Docker Compose reads it automatically.
 
-**Supabase connection issues:**
-- Verify `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env`
-- Make sure you ran `supabase-schema.sql` in your Supabase SQL Editor
-- Check that RLS policies are enabled on all tables
+**Supabase connection fails** -- Check `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env`. Verify `supabase-schema.sql` was executed.
 
-**Port already in use:**
-- Local dev: Vite automatically picks the next available port
-- Docker: Edit `docker-compose.yml` and change `"8080:80"` to another port
+**Port in use** -- Local: Vite picks next available port. Docker: change `"8080:80"` in `docker-compose.yml`.

@@ -2,6 +2,15 @@
 
 An AI-powered Learning Management System that lets you create personalized AI tutors (companions) for voice-based learning sessions.
 
+## Features
+
+- **Real-time Voice AI** - Natural voice conversations with AI tutors
+- **Custom Companions** - Create AI tutors for any subject with different teaching styles (professional, friendly, socratic, direct)
+- **13+ Subjects** - Mathematics, Science, History, English, Computer Science, Physics, Chemistry, Biology, Geography, Art, Music, Foreign Language, Economics
+- **Learning Analytics** - Track progress with session history, daily activity charts, and subject breakdowns
+- **Subscription Plans** - Free tier (10 sessions/month) and Pro tier (unlimited)
+- **Responsive UI** - Dark theme, sidebar navigation, modern design
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -18,13 +27,11 @@ An AI-powered Learning Management System that lets you create personalized AI tu
 
 - **Node.js** 18+ and npm
 - **Docker** and **Docker Compose** (for containerized setup)
-- A **Supabase** project ([supabase.com](https://supabase.com))
+- A **Supabase** account ([supabase.com](https://supabase.com))
 - (Optional) **Vapi AI** account for voice features
 - (Optional) **Stripe** account for payment processing
 
 ## Environment Variables
-
-Create a `.env` file in the project root:
 
 ```bash
 cp .env.example .env
@@ -37,14 +44,18 @@ cp .env.example .env
 | `VITE_VAPI_API_KEY` | No | Vapi AI key for voice sessions |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | No | Stripe publishable key for payments |
 
-> **Note:** The app includes hardcoded fallback values for all keys in `src/lib/config.ts`, so it will run even without a `.env` file. However, setting your own Supabase project is recommended.
+> **Note:** The app includes hardcoded fallback values in `src/lib/config.ts`, so it works out of the box without a `.env` file. Set your own Supabase project for a personal database.
 
 ## Database Setup
 
 1. Go to your Supabase project dashboard
 2. Open the **SQL Editor**
-3. Copy the entire contents of `supabase-schema.sql` and run it
-4. This creates 4 tables (`users`, `companions`, `sessions`, `subscriptions`) with Row Level Security policies and auto-update triggers
+3. Copy and paste the contents of `supabase-schema.sql`
+4. Run it to create all tables, RLS policies, and triggers
+
+This creates 4 tables: `users`, `companions`, `sessions`, `subscriptions` — all protected with Row Level Security.
+
+> **Important for development:** By default, Supabase requires email confirmation before sign-in works. To disable this, go to **Authentication > Providers > Email** in your Supabase dashboard and turn off **"Confirm email"**.
 
 ## Running Locally
 
@@ -59,9 +70,9 @@ cp .env.example .env
 npm run dev
 ```
 
-The app runs at `http://localhost:5173`.
+The app runs at `http://localhost:5173` (or the next available port if 5173 is in use).
 
-### Other Local Commands
+### Other Commands
 
 ```bash
 npm run build       # Type-check + production build (output: dist/)
@@ -98,7 +109,7 @@ docker compose exec app sh     # Open a shell in the container
 
 The Dockerfile uses a multi-stage build:
 
-1. **Builder stage** (`node:20-alpine`) - Installs dependencies and runs `npm run build`. Environment variables are injected as build args so Vite can embed them into the bundle.
+1. **Builder stage** (`node:20-alpine`) - Installs dependencies and runs `npm run build`. Environment variables from your `.env` file are injected as build args so Vite can embed them into the bundle.
 2. **Production stage** (`nginx:alpine`) - Copies the built static files and serves them with Nginx on port 80.
 
 Docker Compose reads your `.env` file and passes the values as build arguments automatically.
@@ -108,7 +119,7 @@ Docker Compose reads your `.env` file and passes the values as build arguments a
 ```
 src/
   components/
-    ui/                   # shadcn/ui components (button, card, input, etc.)
+    ui/                   # shadcn/ui components (button, card, input, select, etc.)
     dashboard-layout.tsx  # Dashboard shell (sidebar + header)
     header.tsx            # Top navigation bar
     sidebar.tsx           # Collapsible sidebar navigation
@@ -119,15 +130,15 @@ src/
     utils.ts              # cn() utility (clsx + tailwind-merge)
   pages/
     home.tsx              # Landing page
-    sign-in.tsx           # Sign in form
-    sign-up.tsx           # Sign up form
-    pricing.tsx           # Pricing (Free / Pro)
-    dashboard.tsx         # Dashboard overview
-    companions.tsx        # AI companion CRUD
+    sign-in.tsx           # Sign in (email/password)
+    sign-up.tsx           # Sign up (auto sign-in after creation)
+    pricing.tsx           # Pricing plans (Free $0 / Pro $19.99/mo)
+    dashboard.tsx         # Dashboard overview (stats, companions)
+    companions.tsx        # Create/manage AI companions
     session.tsx           # Live voice learning session
     sessions.tsx          # Session history
     analytics.tsx         # Learning analytics
-    profile.tsx           # User profile & subscription
+    profile.tsx           # User profile & subscription info
   types/
     index.ts              # TypeScript interfaces
   App.tsx                 # Root component with routes
@@ -137,8 +148,8 @@ src/
 
 ## Routes
 
-| Path | Page | Auth |
-|------|------|------|
+| Path | Page | Auth Required |
+|------|------|:---:|
 | `/` | Landing page | No |
 | `/sign-in` | Sign in | No |
 | `/sign-up` | Sign up | No |
@@ -150,11 +161,11 @@ src/
 | `/dashboard/analytics` | Learning analytics | Yes |
 | `/dashboard/profile` | User profile | Yes |
 
-## API / Services
+## Services
 
-- **Supabase** handles authentication (email/password), database (PostgreSQL), and row-level security
-- **Vapi AI** powers real-time voice conversations with AI tutors (integration is currently simulated for demo)
-- **Stripe** manages subscription billing (Free tier: 10 sessions/month, Pro tier: unlimited)
+- **Supabase** - Authentication (email/password), database (PostgreSQL), row-level security
+- **Vapi AI** - Real-time voice conversations with AI tutors (currently simulated for demo)
+- **Stripe** - Subscription billing (Free: 10 sessions/month, Pro: unlimited)
 
 ## Troubleshooting
 
@@ -162,6 +173,9 @@ src/
 ```bash
 npm run typecheck
 ```
+
+**Can't sign in after sign up:**
+- Disable email confirmation in Supabase: **Authentication > Providers > Email > Confirm email** (turn off)
 
 **Docker build fails or uses wrong env vars:**
 ```bash
@@ -171,9 +185,10 @@ docker compose up --build --no-cache
 ```
 
 **Supabase connection issues:**
-- Verify your `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env`
+- Verify `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in `.env`
 - Make sure you ran `supabase-schema.sql` in your Supabase SQL Editor
 - Check that RLS policies are enabled on all tables
 
-**Port 8080 already in use:**
-Edit `docker-compose.yml` and change `"8080:80"` to another port like `"3000:80"`.
+**Port already in use:**
+- Local dev: Vite automatically picks the next available port
+- Docker: Edit `docker-compose.yml` and change `"8080:80"` to another port
